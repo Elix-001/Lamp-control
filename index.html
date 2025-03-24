@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Lamp Control</title>
+    <!-- Link to the favicon image (same folder as index.html) -->
+    <link rel="icon" href="image.png" type="image/png"> <!-- Replace with your image extension if different -->
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script>
+        const broker = "wss://broker.hivemq.com:8000/mqtt";
+        const controlTopic = "elisee/lamp";
+        const stateTopic = "elisee/lampState";
+        const client = mqtt.connect(broker);
+
+        let lampState = "OFF"; // Default state
+
+        // Display if subscribed or not
+        const subscriptionStatus = document.getElementById('subscriptionStatus');
+        const lampStateDisplay = document.getElementById('lampStateDisplay');
+
+        client.on("connect", () => {
+            console.log("Connected to MQTT Broker");
+            client.subscribe(stateTopic, (err) => {
+                if (err) {
+                    subscriptionStatus.textContent = "Failed to subscribe to the board!";
+                    subscriptionStatus.style.color = "red";
+                } else {
+                    subscriptionStatus.textContent = "Subscribed to the board!";
+                    subscriptionStatus.style.color = "green";
+                }
+            });
+        });
+
+        client.on("message", (topic, message) => {
+            if (topic === stateTopic) {
+                lampState = message.toString();
+                lampStateDisplay.textContent = "Lamp State: " + lampState;
+            }
+        });
+
+        function controlLamp(state) {
+            client.publish(controlTopic, state);
+            console.log("Sent:", state);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="title-container">
+            <!-- Image on the left of the title -->
+            <img src="image.png" alt="Lamp Icon">
+            <h1>IoT Lamp Control</h1>
+        </div>
+        <p id="subscriptionStatus">Connecting to the board...</p>
+        <p id="lampStateDisplay">Lamp State: OFF</p>
+        <div>
+            <button onclick="controlLamp('ON')">Turn ON</button>
+            <button onclick="controlLamp('OFF')">Turn OFF</button>
+            
+        </div>
+        
+        <br><h4>By Elisee (eliseemugiraneza1@gmail.com)</h4>
+        <footer>Built with ❤️ for IoT lovers!</footer>
+    </div>
+</body>
+</html>
